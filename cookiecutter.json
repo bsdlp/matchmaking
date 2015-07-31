@@ -1,0 +1,11 @@
+{
+    "bintray_user": "jchen",
+    "bintray_token": "",
+    "bintray_repo": "docku",
+    "build_steps": "",
+    "dependencies": "go",
+    "project_clone_url": "https://github.com/fly/matchmaking",
+    "project_name": "matchmaking",
+    "project_build_cmd": "godep go build",
+    "out_path": "bin/matchmaking"
+}

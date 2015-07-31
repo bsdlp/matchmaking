@@ -1,0 +1,13 @@
+all: get build upload clean
+
+get:
+	git clone https://github.com/fly/matchmaking /opt/matchmaking
+
+build: /opt/matchmaking
+	cd /opt/matchmaking && ; true
+
+upload: /opt/matchmaking/bin/matchmaking
+	curl -T /opt/matchmaking/bin/matchmaking -u${BINTRAY_USER}:${BINTRAY_TOKEN} "https://api.bintray.com/content/${BINTRAY_USER}/${BINTRAY_REPO}/matchmaking/latest/matchmaking?publish=1"
+
+clean:
+	rm -rf /opt/matchmaking
