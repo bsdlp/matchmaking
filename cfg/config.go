@@ -1,4 +1,4 @@
-package matchmaking
+package cfg
 
 import "github.com/fly/config"
 
