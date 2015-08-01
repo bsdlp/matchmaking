@@ -12,5 +12,8 @@ type Config struct {
 // NewConfig reads configuration from environment and returns a config object.
 func NewConfig() (c *config.Config, err error) {
 	c, err = config.NewConfigFromNamespace("fly", "matchmaking")
+	if err != nil {
+		return
+	}
 	return
 }
