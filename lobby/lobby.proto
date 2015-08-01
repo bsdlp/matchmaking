@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package lobby;
+
+service MatchMaking {
+    rpc Join (Hello) returns (Joined);
+    rpc Leave (Goodbye) returns (Left);
+    rpc Check (Sup) returns (Status);
+}
+
+message User {
+    string id = 1;
+    string name = 2;
+    uint32 maxping = 3;
+}
+
+message Hello {
+    string lobby = 1;
+    User user = 2;
+}
+
+message Joined {
+    string lobby = 1;
+    repeated User user = 2;
+}
+
+message Goodbye {
+    string lobby = 1;
+    User user = 2;
+}
+
+message Left {
+    string lobby = 1;
+    bool left = 2;
+}
+
+message Sup {
+    string lobby = 1;
+    User user = 2;
+    fixed32 timestamp = 3;
+}
+
+message Status {
+    string lobby = 1;
+    repeated User user = 2;
+    fixed32 timestamp = 3;
+}
