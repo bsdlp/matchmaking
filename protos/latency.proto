@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package latency;
+
+service LatencyChecker {
+    rpc Ping (Hello) returns (Reply);
+    rpc GetUserLatency (Query) returns (Result);
+}
+
+message Hello {
+    string user = 1;
+    bytes padding = 3;
+}
+
+message Reply {
+    string location = 1;
+    uint32 latency = 2;
+}
+
+message Query {
+    string user = 1;
+}
+
+message Result {
+    string location = 1;
+    uint32 latency = 2;
+    string user = 3;
+}
