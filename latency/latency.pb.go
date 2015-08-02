@@ -9,9 +9,7 @@ It is generated from these files:
 	latency.proto
 
 It has these top-level messages:
-	Hello
-	Reply
-	Query
+	Request
 	Result
 */
 package latency
@@ -30,31 +28,14 @@ var _ grpc.ClientConn
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 
-type Hello struct {
-	User    string `protobuf:"bytes,1,opt,name=user" json:"user,omitempty"`
-	Padding []byte `protobuf:"bytes,3,opt,name=padding,proto3" json:"padding,omitempty"`
-}
-
-func (m *Hello) Reset()         { *m = Hello{} }
-func (m *Hello) String() string { return proto.CompactTextString(m) }
-func (*Hello) ProtoMessage()    {}
-
-type Reply struct {
-	Location string `protobuf:"bytes,1,opt,name=location" json:"location,omitempty"`
-	Latency  uint32 `protobuf:"varint,2,opt,name=latency" json:"latency,omitempty"`
-}
-
-func (m *Reply) Reset()         { *m = Reply{} }
-func (m *Reply) String() string { return proto.CompactTextString(m) }
-func (*Reply) ProtoMessage()    {}
-
-type Query struct {
+type Request struct {
 	User string `protobuf:"bytes,1,opt,name=user" json:"user,omitempty"`
+	Ip   string `protobuf:"bytes,2,opt,name=ip" json:"ip,omitempty"`
 }
 
-func (m *Query) Reset()         { *m = Query{} }
-func (m *Query) String() string { return proto.CompactTextString(m) }
-func (*Query) ProtoMessage()    {}
+func (m *Request) Reset()         { *m = Request{} }
+func (m *Request) String() string { return proto.CompactTextString(m) }
+func (*Request) ProtoMessage()    {}
 
 type Result struct {
 	Location string `protobuf:"bytes,1,opt,name=location" json:"location,omitempty"`
@@ -69,8 +50,7 @@ func (*Result) ProtoMessage()    {}
 // Client API for LatencyChecker service
 
 type LatencyCheckerClient interface {
-	Ping(ctx context.Context, in *Hello, opts ...grpc.CallOption) (*Reply, error)
-	GetUserLatency(ctx context.Context, in *Query, opts ...grpc.CallOption) (*Result, error)
+	Ping(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Result, error)
 }
 
 type latencyCheckerClient struct {
@@ -81,18 +61,9 @@ func NewLatencyCheckerClient(cc *grpc.ClientConn) LatencyCheckerClient {
 	return &latencyCheckerClient{cc}
 }
 
-func (c *latencyCheckerClient) Ping(ctx context.Context, in *Hello, opts ...grpc.CallOption) (*Reply, error) {
-	out := new(Reply)
-	err := grpc.Invoke(ctx, "/latency.LatencyChecker/Ping", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *latencyCheckerClient) GetUserLatency(ctx context.Context, in *Query, opts ...grpc.CallOption) (*Result, error) {
+func (c *latencyCheckerClient) Ping(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/latency.LatencyChecker/GetUserLatency", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/latency.LatencyChecker/Ping", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -102,8 +73,7 @@ func (c *latencyCheckerClient) GetUserLatency(ctx context.Context, in *Query, op
 // Server API for LatencyChecker service
 
 type LatencyCheckerServer interface {
-	Ping(context.Context, *Hello) (*Reply, error)
-	GetUserLatency(context.Context, *Query) (*Result, error)
+	Ping(context.Context, *Request) (*Result, error)
 }
 
 func RegisterLatencyCheckerServer(s *grpc.Server, srv LatencyCheckerServer) {
@@ -111,23 +81,11 @@ func RegisterLatencyCheckerServer(s *grpc.Server, srv LatencyCheckerServer) {
 }
 
 func _LatencyChecker_Ping_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
-	in := new(Hello)
+	in := new(Request)
 	if err := codec.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
 	out, err := srv.(LatencyCheckerServer).Ping(ctx, in)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func _LatencyChecker_GetUserLatency_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
-	in := new(Query)
-	if err := codec.Unmarshal(buf, in); err != nil {
-		return nil, err
-	}
-	out, err := srv.(LatencyCheckerServer).GetUserLatency(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -141,10 +99,6 @@ var _LatencyChecker_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Ping",
 			Handler:    _LatencyChecker_Ping_Handler,
-		},
-		{
-			MethodName: "GetUserLatency",
-			Handler:    _LatencyChecker_GetUserLatency_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{},
