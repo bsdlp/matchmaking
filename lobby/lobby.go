@@ -126,8 +126,21 @@ func (s *State) FindLobby(l *Lobby) (rl *Lobby, err error) {
 }
 
 // Join adds a user to the lobby.
-// TODO: implement
 func (s *State) Join(ctx context.Context, hello *Hello) (joined *Joined, err error) {
-	// l, err := s.FindLobby(&Lobby{})
+	l, err := s.FindLobby(&Lobby{ID: hello.Lobby})
+	if err != nil {
+		return
+	}
+
+	err = l.Join(hello.User)
+	if err != nil {
+		return
+	}
+
+	joined = &Joined{
+		Lobby: l.ID,
+		User:  l.Users,
+	}
+
 	return
 }
