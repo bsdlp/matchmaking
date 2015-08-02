@@ -38,10 +38,10 @@ func (m *Request) String() string { return proto.CompactTextString(m) }
 func (*Request) ProtoMessage()    {}
 
 type Result struct {
-	Location string `protobuf:"bytes,1,opt,name=location" json:"location,omitempty"`
-	Latency  uint32 `protobuf:"varint,2,opt,name=latency" json:"latency,omitempty"`
-	User     string `protobuf:"bytes,3,opt,name=user" json:"user,omitempty"`
-	Pinging  bool   `protobuf:"varint,4,opt,name=pinging" json:"pinging,omitempty"`
+	Location string  `protobuf:"bytes,1,opt,name=location" json:"location,omitempty"`
+	Latency  float64 `protobuf:"fixed64,2,opt,name=latency" json:"latency,omitempty"`
+	User     string  `protobuf:"bytes,3,opt,name=user" json:"user,omitempty"`
+	Pinging  bool    `protobuf:"varint,4,opt,name=pinging" json:"pinging,omitempty"`
 }
 
 func (m *Result) Reset()         { *m = Result{} }
