@@ -15,4 +15,5 @@ message Result {
     string location = 1;
     uint32 latency = 2;
     string user = 3;
+    bool pinging = 4;
 }
