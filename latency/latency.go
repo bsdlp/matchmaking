@@ -32,12 +32,6 @@ func (p *pinger) ping(ip string, out <-chan time.Duration) {
 	return
 }
 
-// GetContext returns context for Checker session.
-func (c *Checker) GetContext(user string) (ctx context.Context) {
-	ctx = context.WithValue(context.Context{}, "user", user)
-	return
-}
-
 // Ping checks latency to user
 func (c *Checker) Ping(ctx context.Context, in *Request) (r *Result, err error) {
 	out := make(chan time.Duration)
