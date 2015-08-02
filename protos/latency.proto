@@ -8,7 +8,7 @@ service LatencyChecker {
 
 message Request {
     string user = 1;
-    string ip = 2;
+    string IP = 2;
 }
 
 message Result {

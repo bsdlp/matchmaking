@@ -30,7 +30,7 @@ var _ = proto.Marshal
 
 type Request struct {
 	User string `protobuf:"bytes,1,opt,name=user" json:"user,omitempty"`
-	Ip   string `protobuf:"bytes,2,opt,name=ip" json:"ip,omitempty"`
+	IP   string `protobuf:"bytes,2,opt" json:"IP,omitempty"`
 }
 
 func (m *Request) Reset()         { *m = Request{} }
