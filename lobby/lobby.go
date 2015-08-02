@@ -44,12 +44,12 @@ const (
 )
 
 // Lobbies is the State used for testing.
-var Lobbies = State{}
+var Lobbies = &State{}
 
 // NewLobby creates a new lobby.
 func NewLobby(cfg Config) (lobby *Lobby) {
 	lobby = &Lobby{
-		ID:     uuid.NewV4(),
+		ID:     uuid.NewV4().String(),
 		Config: cfg,
 	}
 	return
@@ -74,15 +74,15 @@ func (l *Lobby) ValidatePrivate(user *User) (err error) {
 // allowed to join the lobby. Should be protected by a lock.
 func (l *Lobby) Validate(user *User) (err error) {
 	switch {
-	case l.PrivacyLevel == PublicMatch:
+	case l.Config.PrivacyLevel == PublicMatch:
 		err = l.ValidatePublic(user)
 		return
-	case l.PrivacyLevel == PrivateMatch:
+	case l.Config.PrivacyLevel == PrivateMatch:
 		err = l.ValidatePrivate(user)
 		return
 	}
 	err = fmt.Errorf(
-		"Validator for privacy level %v not implemented", level)
+		"Validator for privacy level %v not implemented", l.Config.PrivacyLevel)
 	return
 }
 
@@ -102,10 +102,10 @@ func (l *Lobby) Join(user *User) (err error) {
 // the attributes do not match any lobby, then a new lobby is created with
 // provided attributes. This method should get overridden in code used for
 // more than testing.
-func (s State) FindLobby(l Lobby) (rl *Lobby, err error) {
+func (s *State) FindLobby(l *Lobby) (rl *Lobby, err error) {
 	s.Mutex.Lock()
 	for _, _l := range s.Lobbies {
-		_l.Lock()
+		_l.Mutex.Lock()
 		// If lobby IDs are an exact match, return it.
 		// TODO: Greedy filter (missing search attributes don't count against
 		// filter)
@@ -113,7 +113,7 @@ func (s State) FindLobby(l Lobby) (rl *Lobby, err error) {
 			rl = _l
 			return
 		}
-		_l.Unlock()
+		_l.Mutex.Unlock()
 	}
 
 	// If no lobby is found with matching attributes, create a new lobby.
@@ -127,6 +127,7 @@ func (s State) FindLobby(l Lobby) (rl *Lobby, err error) {
 
 // Join adds a user to the lobby.
 // TODO: implement
-func Join(ctx context.Context, hello *Hello) (joined *Joined, err error) {
-	l, err := lobbies.FindLobby()
+func (s *State) Join(ctx context.Context, hello *Hello) (joined *Joined, err error) {
+	// l, err := s.FindLobby(&Lobby{})
+	return
 }
