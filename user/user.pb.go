@@ -12,7 +12,6 @@ It has these top-level messages:
 	User
 	UserList
 	Delta
-	DeleteResponse
 */
 package user
 
@@ -63,21 +62,12 @@ func (m *Delta) Reset()         { *m = Delta{} }
 func (m *Delta) String() string { return proto.CompactTextString(m) }
 func (*Delta) ProtoMessage()    {}
 
-type DeleteResponse struct {
-	User    string `protobuf:"bytes,1,opt" json:"User,omitempty"`
-	Deleted bool   `protobuf:"varint,2,opt,name=deleted" json:"deleted,omitempty"`
-}
-
-func (m *DeleteResponse) Reset()         { *m = DeleteResponse{} }
-func (m *DeleteResponse) String() string { return proto.CompactTextString(m) }
-func (*DeleteResponse) ProtoMessage()    {}
-
 // Client API for UserQuery service
 
 type UserQueryClient interface {
 	Search(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserList, error)
 	Update(ctx context.Context, in *Delta, opts ...grpc.CallOption) (*User, error)
-	Delete(ctx context.Context, in *User, opts ...grpc.CallOption) (*DeleteResponse, error)
+	Delete(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
 	Create(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
 }
 
@@ -107,8 +97,8 @@ func (c *userQueryClient) Update(ctx context.Context, in *Delta, opts ...grpc.Ca
 	return out, nil
 }
 
-func (c *userQueryClient) Delete(ctx context.Context, in *User, opts ...grpc.CallOption) (*DeleteResponse, error) {
-	out := new(DeleteResponse)
+func (c *userQueryClient) Delete(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
 	err := grpc.Invoke(ctx, "/user.UserQuery/Delete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -130,7 +120,7 @@ func (c *userQueryClient) Create(ctx context.Context, in *User, opts ...grpc.Cal
 type UserQueryServer interface {
 	Search(context.Context, *User) (*UserList, error)
 	Update(context.Context, *Delta) (*User, error)
-	Delete(context.Context, *User) (*DeleteResponse, error)
+	Delete(context.Context, *User) (*User, error)
 	Create(context.Context, *User) (*User, error)
 }
 
