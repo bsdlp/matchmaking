@@ -14,11 +14,6 @@ message User {
     string Name = 2;
 }
 
-message Friends {
-    string User = 1;
-    repeated User Users = 2;
-}
-
 message UserList {
     repeated User Users = 1;
 }
@@ -26,7 +21,6 @@ message UserList {
 message Delta {
     string User = 1;
     string Name = 2;
-    repeated string Friend = 3;
 }
 
 message DeleteResponse {

@@ -10,7 +10,6 @@ It is generated from these files:
 
 It has these top-level messages:
 	User
-	Friends
 	UserList
 	Delta
 	DeleteResponse
@@ -40,22 +39,6 @@ func (m *User) Reset()         { *m = User{} }
 func (m *User) String() string { return proto.CompactTextString(m) }
 func (*User) ProtoMessage()    {}
 
-type Friends struct {
-	User  string  `protobuf:"bytes,1,opt" json:"User,omitempty"`
-	Users []*User `protobuf:"bytes,2,rep" json:"Users,omitempty"`
-}
-
-func (m *Friends) Reset()         { *m = Friends{} }
-func (m *Friends) String() string { return proto.CompactTextString(m) }
-func (*Friends) ProtoMessage()    {}
-
-func (m *Friends) GetUsers() []*User {
-	if m != nil {
-		return m.Users
-	}
-	return nil
-}
-
 type UserList struct {
 	Users []*User `protobuf:"bytes,1,rep" json:"Users,omitempty"`
 }
@@ -72,9 +55,8 @@ func (m *UserList) GetUsers() []*User {
 }
 
 type Delta struct {
-	User   string   `protobuf:"bytes,1,opt" json:"User,omitempty"`
-	Name   string   `protobuf:"bytes,2,opt" json:"Name,omitempty"`
-	Friend []string `protobuf:"bytes,3,rep" json:"Friend,omitempty"`
+	User string `protobuf:"bytes,1,opt" json:"User,omitempty"`
+	Name string `protobuf:"bytes,2,opt" json:"Name,omitempty"`
 }
 
 func (m *Delta) Reset()         { *m = Delta{} }
