@@ -9,26 +9,21 @@ import (
 	"golang.org/x/net/context"
 )
 
-type pinger fastping.Pinger
-
 // Checker implements latency checker server
 type Checker Config
 
 // DefaultPingCount is the default number of times we should ping a target.
 const DefaultPingCount = 10
 
-func (p *pinger) ping(ip string, out <-chan time.Duration) {
-	p.AddIP(in.IP)
+func ping(p *fastping.Pinger, ip string, out chan time.Duration) {
+	p.AddIP(ip)
 	p.OnRecv = func(addr *net.IPAddr, rtt time.Duration) {
 		out <- rtt
 	}
 	p.OnIdle = func() {
 		return
 	}
-	err = p.RunLoop()
-	if err != nil {
-		return
-	}
+	p.RunLoop()
 	return
 }
 
@@ -45,23 +40,23 @@ func (c *Checker) Ping(ctx context.Context, in *Request) (r *Result, err error) 
 
 	// Ping in a goroutine
 	p := fastping.NewPinger()
-	go p.ping(in.IP, out)
+	go ping(p, in.IP, out)
 
 	var totalDuration time.Duration
 	pingCount, ok := ctx.Value("pingCount").(int)
 	if !ok {
-		pingCount := DefaultPingCount
+		pingCount = DefaultPingCount
 	}
 
 	for i := 0; i < pingCount; i++ {
 		duration := <-out
-		totalDuration += totalDuration
+		totalDuration += duration
 	}
 	p.Stop()
 
 	// average latency in milliseconds
-	var averageLatency float64
-	averageLatency = totalDuration.Nanoseconds() / 1e6 / pingCount
+	var averageLatency int64
+	averageLatency = totalDuration.Nanoseconds() / 1e6 / int64(pingCount)
 
 	r = &Result{
 		Location: c.ID,

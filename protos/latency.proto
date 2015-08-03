@@ -13,7 +13,7 @@ message Request {
 
 message Result {
     string location = 1;
-    double latency = 2;
+    int64 latency = 2;
     string user = 3;
     bool pinging = 4;
 }
