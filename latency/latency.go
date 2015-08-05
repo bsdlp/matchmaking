@@ -20,12 +20,10 @@ type Session struct {
 	Location  string // Location UUID
 	User      string // User UUID
 	IP        net.IP
-	PingCount int // Number of times to ping target
+	pingCount int // Number of times target has been pinged in this session
 	TotalRTT  time.Duration
-	State     int
-	RWMutex   sync.RWMutex
-
-	pings chan time.Duration
+	Status    int
+	Mutex     sync.Mutex
 }
 
 // Ping States
@@ -37,104 +35,40 @@ const (
 
 // State holds global state for this location.
 type State struct {
-	PingSessions []*Session
+	PingSessions map[string]*Session // map[IPAddress]*Session
 	PingChecker  Checker
 	Pinger       *fastping.Pinger
 	Mutex        sync.Mutex
 }
 
-// DefaultPingCount is the default number of times we should ping a target.
-const DefaultPingCount = 10
+// DefaultPingLimit is the default number of times we should ping a target.
+const DefaultPingLimit = 5
 
-// NewState returns a new State object.
-func NewState(id string) (state *State) {
-	state = &State{
-		PingSessions: make([]*Session),
-		PingChecker: Config{
-			ID:        id,
-			PingCount: DefaultPingCount,
-		},
-		Pinger: fastping.NewPinger(),
-	}
-	return
-}
-
-// Ping the host based on attributes from its Session.
-func (s *Session) Ping() {
-	s.RWMutex.Lock()
-	s.State = Pinging
-
-	p := fastping.NewPinger()
-	p.AddIP(ip)
-	p.OnRecv = func(addr *net.IPAddr, rtt time.Duration) {
-		s.pings <- rtt
-	}
-	p.OnIdle = func() {
+// NewSession creates a new ping session.
+func NewSession(state *State, in *Request) (newSession *Session, err error) {
+	// validate IP address
+	ip := net.ParseIP(in.IP)
+	if ip == nil {
+		err = fmt.Errorf("'%s' is not a valid ip address", in.IP)
 		return
 	}
-	p.RunLoop()
 
-	var totalDuration time.Duration
-	for i := 0; i < pingCount; i++ {
-		duration := <-s.pings
-		s.TotalRTT += duration
+	newSession = &Session{
+		ID:       uuid.NewV4().String(),
+		Location: state.PingChecker.ID,
+		User:     in.User,
+		IP:       ip,
+		Status:   Waiting,
 	}
-	p.Stop()
-
-	s.State = Done
-	s.RWMutex.Unlock()
 	return
 }
 
 // AverageLatency calculates average latency in ms
-func (s *Session) AverageLatency(totalRTT time.Duration) (averageLatency int64) {
-	averageLatency = totalRTT.Nanoseconds() / 1e6 / int64(s.PingCount)
-}
-
-// NewSession creates a new ping session.
-func NewSession(state *State, in *Request) (newSession *Session) {
-	// validate IP address
-	ip := net.ParseIP(in.IP)
-	if ip == nil {
-		err = fmt.Errorf("'%v' is not a valid ip address")
-		return
-	}
-
-	pings := make(chan time.Duration)
-
-	newSession = &Session{
-		ID:        uuid.NewV4(),
-		Location:  state.PingChecker.ID,
-		User:      in.User,
-		IP:        ip,
-		PingCount: state.PingChecker.PingCount,
-		TotalRTT:  time.ParseDuration("0"),
-		State:     Waiting,
-		pings:     pings,
-	}
+func (s *Session) AverageLatency() (averageLatency int64) {
+	s.Mutex.Lock()
+	averageLatency = s.TotalRTT.Nanoseconds() / 1e6 / int64(s.pingCount)
+	s.Mutex.Unlock()
 	return
-}
-
-// RenderResult returns a result response based on session.
-func (s *Session) RenderResult() (r *Result) {
-	switch {
-	case s.State == Done:
-		// average latency in milliseconds
-		r = &Result{
-			Location: state.PingChecker.ID,
-			Latency:  s.AverageLatency(s.TotalRTT),
-			User:     s.User,
-			Pinging:  false,
-		}
-		return
-	case s.State != Done:
-		r = &Result{
-			Location: state.PingChecker.ID,
-			User:     s.User,
-			Pinging:  true,
-		}
-		return
-	}
 }
 
 // FilterByRequest filters sessions based on request parameters.
@@ -143,43 +77,78 @@ func (s *Session) FilterByRequest(in *Request) (ok bool) {
 	case s.User != in.User:
 		ok = false
 		return
-	case s.IP != in.IP:
+	case s.IP.String() != in.IP:
 		ok = false
 		return
 	}
 	return
 }
 
-// GetSession gets a session based on User and IP.
-func (state *State) GetSession(in *Request) (s *Session, ok bool) {
-	for session := range state.PingSessions {
-		found = session.FilterByRequest(in)
-		if found {
-			s = session
-			ok = true
-			return
-		}
+// NewState returns a new State object.
+func NewState(id string) (state *State) {
+	pinger := fastping.NewPinger()
+	state = &State{
+		PingSessions: make(map[string]*Session),
+		PingChecker: Checker{
+			ID:        id,
+			PingLimit: DefaultPingLimit,
+		},
+		Pinger: pinger,
 	}
+
+	pinger.OnRecv = state.onRecv
+	pinger.RunLoop()
+	return
+}
+
+func (state *State) onRecv(addr *net.IPAddr, rtt time.Duration) {
+	s := state.PingSessions[addr.String()]
+
+	s.Mutex.Lock()
+	s.TotalRTT += rtt
+	s.pingCount++
+	if s.pingCount > state.PingChecker.PingLimit {
+		state.Pinger.RemoveIPAddr(addr)
+	}
+	s.Mutex.Unlock()
+
 	return
 }
 
 // Ping checks latency to user
 func (state *State) Ping(ctx context.Context, in *Request) (r *Result, err error) {
+	ip := net.ParseIP(in.IP)
+
 	var s *Session
-	s, ok = state.GetSession(in)
-	if !ok {
+	var ok bool
+	s, ok = state.PingSessions[ip.String()]
+	switch {
+	case ok:
+		r = &Result{
+			Location: state.PingChecker.ID,
+			Latency:  s.AverageLatency(),
+			User:     s.User,
+			Pinging:  false,
+		}
+	case !ok:
 		// Create a new session and add it to state.
-		s = func(state, in) (s *Session) {
-			s = NewSession(state, in)
-			state.Mutex.Lock()
-			state.PingSessions = append(state.PingSessions, s)
-			state.Mutex.Unlock()
-		}(state, in)
+		s, err = NewSession(state, in)
+		if err != nil {
+			return
+		}
+		state.Mutex.Lock()
+		state.PingSessions[s.IP.String()] = s
+		err = state.Pinger.AddIP(ip.String())
+		state.Mutex.Unlock()
+		if err != nil {
+			return
+		}
 
-		// Ping in a goroutine
-		go s.Ping()
+		r = &Result{
+			Location: state.PingChecker.ID,
+			User:     s.User,
+			Pinging:  true,
+		}
 	}
-
-	r = s.RenderResult()
 	return
 }
