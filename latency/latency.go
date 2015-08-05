@@ -115,6 +115,9 @@ func (state *State) Ping(ctx context.Context, in *Request) (r *Result, err error
 	s, ok = state.PingSessions[ip.String()]
 	switch {
 	case ok:
+		// TODO: implement cache instead of deleting immediately or something.
+		delete(state.PingSessions, ip.String())
+
 		r = &Result{
 			Location: state.PingChecker.ID,
 			Latency:  s.AverageLatency(),
