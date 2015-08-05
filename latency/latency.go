@@ -22,16 +22,8 @@ type Session struct {
 	IP        net.IP
 	PingCount int // Number of times target has been pinged in this session
 	TotalRTT  time.Duration
-	Status    int
 	Mutex     sync.Mutex
 }
-
-// Ping States
-const (
-	Waiting = iota
-	Pinging
-	Done
-)
 
 // State holds global state for this location.
 type State struct {
@@ -58,7 +50,6 @@ func NewSession(state *State, in *Request) (newSession *Session, err error) {
 		Location: state.PingChecker.ID,
 		User:     in.User,
 		IP:       ip,
-		Status:   Waiting,
 	}
 	return
 }
