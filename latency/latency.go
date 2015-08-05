@@ -20,7 +20,7 @@ type Session struct {
 	Location  string // Location UUID
 	User      string // User UUID
 	IP        net.IP
-	pingCount int // Number of times target has been pinged in this session
+	PingCount int // Number of times target has been pinged in this session
 	TotalRTT  time.Duration
 	Status    int
 	Mutex     sync.Mutex
@@ -66,7 +66,7 @@ func NewSession(state *State, in *Request) (newSession *Session, err error) {
 // AverageLatency calculates average latency in ms
 func (s *Session) AverageLatency() (averageLatency int64) {
 	s.Mutex.Lock()
-	averageLatency = s.TotalRTT.Nanoseconds() / 1e6 / int64(s.pingCount)
+	averageLatency = s.TotalRTT.Nanoseconds() / 1e6 / int64(s.PingCount)
 	s.Mutex.Unlock()
 	return
 }
@@ -106,8 +106,8 @@ func (state *State) onRecv(addr *net.IPAddr, rtt time.Duration) {
 
 	s.Mutex.Lock()
 	s.TotalRTT += rtt
-	s.pingCount++
-	if s.pingCount > state.PingChecker.PingLimit {
+	s.PingCount++
+	if s.PingCount > state.PingChecker.PingLimit {
 		state.Pinger.RemoveIPAddr(addr)
 	}
 	s.Mutex.Unlock()
