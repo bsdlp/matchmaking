@@ -62,19 +62,6 @@ func (s *Session) AverageLatency() (averageLatency int64) {
 	return
 }
 
-// FilterByRequest filters sessions based on request parameters.
-func (s *Session) FilterByRequest(in *Request) (ok bool) {
-	switch {
-	case s.User != in.User:
-		ok = false
-		return
-	case s.IP.String() != in.IP:
-		ok = false
-		return
-	}
-	return
-}
-
 // NewState returns a new State object.
 func NewState(id string) (state *State) {
 	pinger := fastping.NewPinger()
