@@ -39,11 +39,25 @@ const (
 type State struct {
 	PingSessions []*Session
 	PingChecker  Checker
+	Pinger       *fastping.Pinger
 	Mutex        sync.Mutex
 }
 
 // DefaultPingCount is the default number of times we should ping a target.
 const DefaultPingCount = 10
+
+// NewState returns a new State object.
+func NewState(id string) (state *State) {
+	state = &State{
+		PingSessions: make([]*Session),
+		PingChecker: Config{
+			ID:        id,
+			PingCount: DefaultPingCount,
+		},
+		Pinger: fastping.NewPinger(),
+	}
+	return
+}
 
 // Ping the host based on attributes from its Session.
 func (s *Session) Ping() {
