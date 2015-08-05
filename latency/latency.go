@@ -36,29 +36,31 @@ type State struct {
 // DefaultPingLimit is the default number of times we should ping a target.
 const DefaultPingLimit = 5
 
-// NewSession creates a new ping session.
-func NewSession(state *State, in *Request) (newSession *Session, err error) {
-	// validate IP address
-	ip := net.ParseIP(in.IP)
-	if ip == nil {
-		err = fmt.Errorf("'%s' is not a valid ip address", in.IP)
-		return
-	}
-
-	newSession = &Session{
-		ID:       uuid.NewV4().String(),
-		Location: state.PingChecker.ID,
-		User:     in.User,
-		IP:       ip,
-	}
-	return
-}
-
 // AverageLatency calculates average latency in ms
 func (s *Session) AverageLatency() (averageLatency int64) {
 	s.Mutex.Lock()
 	averageLatency = s.TotalRTT.Nanoseconds() / 1e6 / int64(s.PingCount)
 	s.Mutex.Unlock()
+	return
+}
+
+// NewSession creates a new ping session.
+func (state *State) NewSession(user string, ip net.IP) (s *Session, err error) {
+	s = &Session{
+		ID:       uuid.NewV4().String(),
+		Location: state.PingChecker.ID,
+		User:     user,
+		IP:       ip,
+	}
+
+	state.Mutex.Lock()
+	state.PingSessions[ip.String()] = s
+	err = state.Pinger.AddIP(ip.String())
+	state.Mutex.Unlock()
+	if err != nil {
+		return
+	}
+
 	return
 }
 
@@ -95,7 +97,12 @@ func (state *State) onRecv(addr *net.IPAddr, rtt time.Duration) {
 
 // Ping checks latency to user
 func (state *State) Ping(ctx context.Context, in *Request) (r *Result, err error) {
+	// validate IP address
 	ip := net.ParseIP(in.IP)
+	if ip == nil {
+		err = fmt.Errorf("'%s' is not a valid ip address", in.IP)
+		return
+	}
 
 	var s *Session
 	var ok bool
@@ -113,18 +120,10 @@ func (state *State) Ping(ctx context.Context, in *Request) (r *Result, err error
 		}
 	case !ok:
 		// Create a new session and add it to state.
-		s, err = NewSession(state, in)
+		s, err = state.NewSession(in.User, ip)
 		if err != nil {
 			return
 		}
-		state.Mutex.Lock()
-		state.PingSessions[s.IP.String()] = s
-		err = state.Pinger.AddIP(ip.String())
-		state.Mutex.Unlock()
-		if err != nil {
-			return
-		}
-
 		r = &Result{
 			Location: state.PingChecker.ID,
 			User:     s.User,
