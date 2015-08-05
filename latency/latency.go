@@ -122,7 +122,7 @@ func (state *State) Ping(ctx context.Context, in *Request) (r *Result, err error
 			Location: state.PingChecker.ID,
 			Latency:  s.AverageLatency(),
 			User:     s.User,
-			Pinging:  false,
+			Done:     true,
 		}
 	case !ok:
 		// Create a new session and add it to state.
@@ -141,7 +141,7 @@ func (state *State) Ping(ctx context.Context, in *Request) (r *Result, err error
 		r = &Result{
 			Location: state.PingChecker.ID,
 			User:     s.User,
-			Pinging:  true,
+			Done:     false,
 		}
 	}
 	return

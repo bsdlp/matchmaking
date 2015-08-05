@@ -41,7 +41,7 @@ type Result struct {
 	Location string `protobuf:"bytes,1,opt,name=location" json:"location,omitempty"`
 	Latency  int64  `protobuf:"varint,2,opt,name=latency" json:"latency,omitempty"`
 	User     string `protobuf:"bytes,3,opt,name=user" json:"user,omitempty"`
-	Pinging  bool   `protobuf:"varint,4,opt,name=pinging" json:"pinging,omitempty"`
+	Done     bool   `protobuf:"varint,4,opt,name=done" json:"done,omitempty"`
 }
 
 func (m *Result) Reset()         { *m = Result{} }
