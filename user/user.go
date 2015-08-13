@@ -18,11 +18,11 @@ type State struct {
 // ValidateAndSetName checks if a new name is provided and updates the user's
 // name.
 func (u *User) ValidateAndSetName(name string) (err error) {
-	if in.Name == "" {
-		err = fmt.Errorf("%v is not a valid name for a user", in.Name)
+	if name == "" {
+		err = fmt.Errorf("%v is not a valid name for a user", name)
 		return
 	}
-	u.Name = in.Name
+	u.Name = name
 	return
 }
 
@@ -30,13 +30,13 @@ func (u *User) ValidateAndSetName(name string) (err error) {
 // overrides all other parameters.
 func (state *State) Search(ctx context.Context, in *User) (ul *UserList, err error) {
 	ul = &UserList{Users: []*User{}}
-	for user := range state.Users {
-		if user.ID == in.ID {
-			ul = &UserList{Users: []*User{user}}
+	for _, u := range state.Users {
+		if u.ID == in.ID {
+			ul = &UserList{Users: []*User{u}}
 			return
 		}
-		if user.Name == in.Name {
-			ul.Users = append(ul.Users, user)
+		if u.Name == in.Name {
+			ul.Users = append(ul.Users, u)
 		}
 	}
 	return
@@ -70,7 +70,7 @@ func (state *State) Delete(ctx context.Context, in *User) (u *User, err error) {
 
 	// If the user is found, pop it from state.
 	if index != -1 {
-		state.Users = append(state.Users[:index], state.Users[index+1:])
+		state.Users = append(state.Users[:index], state.Users[index+1:]...)
 	} else {
 		err = fmt.Errorf("User %+v not found in state", in)
 	}
@@ -82,7 +82,7 @@ func (state *State) Delete(ctx context.Context, in *User) (u *User, err error) {
 // Create creates User specified by provided User object and adds it to state.
 func (state *State) Create(ctx context.Context, in *User) (u *User, err error) {
 	state.Mutex.Lock()
-	in.ID = uuid.NewV4()
+	in.ID = uuid.NewV4().String()
 	state.Users = append(state.Users, in)
 	state.Mutex.Unlock()
 
