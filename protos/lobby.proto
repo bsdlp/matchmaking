@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package lobby;
 
-service MatchMaking {
+service Lobby {
     rpc Join (Hello) returns (Joined);
     rpc Leave (Goodbye) returns (Left);
     rpc Check (Sup) returns (Status);

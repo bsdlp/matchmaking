@@ -134,112 +134,112 @@ func (m *Status) GetUser() []*User {
 	return nil
 }
 
-// Client API for MatchMaking service
+// Client API for Lobby service
 
-type MatchMakingClient interface {
+type LobbyClient interface {
 	Join(ctx context.Context, in *Hello, opts ...grpc.CallOption) (*Joined, error)
 	Leave(ctx context.Context, in *Goodbye, opts ...grpc.CallOption) (*Left, error)
 	Check(ctx context.Context, in *Sup, opts ...grpc.CallOption) (*Status, error)
 }
 
-type matchMakingClient struct {
+type lobbyClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewMatchMakingClient(cc *grpc.ClientConn) MatchMakingClient {
-	return &matchMakingClient{cc}
+func NewLobbyClient(cc *grpc.ClientConn) LobbyClient {
+	return &lobbyClient{cc}
 }
 
-func (c *matchMakingClient) Join(ctx context.Context, in *Hello, opts ...grpc.CallOption) (*Joined, error) {
+func (c *lobbyClient) Join(ctx context.Context, in *Hello, opts ...grpc.CallOption) (*Joined, error) {
 	out := new(Joined)
-	err := grpc.Invoke(ctx, "/lobby.MatchMaking/Join", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/lobby.Lobby/Join", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *matchMakingClient) Leave(ctx context.Context, in *Goodbye, opts ...grpc.CallOption) (*Left, error) {
+func (c *lobbyClient) Leave(ctx context.Context, in *Goodbye, opts ...grpc.CallOption) (*Left, error) {
 	out := new(Left)
-	err := grpc.Invoke(ctx, "/lobby.MatchMaking/Leave", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/lobby.Lobby/Leave", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *matchMakingClient) Check(ctx context.Context, in *Sup, opts ...grpc.CallOption) (*Status, error) {
+func (c *lobbyClient) Check(ctx context.Context, in *Sup, opts ...grpc.CallOption) (*Status, error) {
 	out := new(Status)
-	err := grpc.Invoke(ctx, "/lobby.MatchMaking/Check", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/lobby.Lobby/Check", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for MatchMaking service
+// Server API for Lobby service
 
-type MatchMakingServer interface {
+type LobbyServer interface {
 	Join(context.Context, *Hello) (*Joined, error)
 	Leave(context.Context, *Goodbye) (*Left, error)
 	Check(context.Context, *Sup) (*Status, error)
 }
 
-func RegisterMatchMakingServer(s *grpc.Server, srv MatchMakingServer) {
-	s.RegisterService(&_MatchMaking_serviceDesc, srv)
+func RegisterLobbyServer(s *grpc.Server, srv LobbyServer) {
+	s.RegisterService(&_Lobby_serviceDesc, srv)
 }
 
-func _MatchMaking_Join_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
+func _Lobby_Join_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
 	in := new(Hello)
 	if err := codec.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(MatchMakingServer).Join(ctx, in)
+	out, err := srv.(LobbyServer).Join(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func _MatchMaking_Leave_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
+func _Lobby_Leave_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
 	in := new(Goodbye)
 	if err := codec.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(MatchMakingServer).Leave(ctx, in)
+	out, err := srv.(LobbyServer).Leave(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func _MatchMaking_Check_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
+func _Lobby_Check_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
 	in := new(Sup)
 	if err := codec.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(MatchMakingServer).Check(ctx, in)
+	out, err := srv.(LobbyServer).Check(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-var _MatchMaking_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "lobby.MatchMaking",
-	HandlerType: (*MatchMakingServer)(nil),
+var _Lobby_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "lobby.Lobby",
+	HandlerType: (*LobbyServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Join",
-			Handler:    _MatchMaking_Join_Handler,
+			Handler:    _Lobby_Join_Handler,
 		},
 		{
 			MethodName: "Leave",
-			Handler:    _MatchMaking_Leave_Handler,
+			Handler:    _Lobby_Leave_Handler,
 		},
 		{
 			MethodName: "Check",
-			Handler:    _MatchMaking_Check_Handler,
+			Handler:    _Lobby_Check_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{},
