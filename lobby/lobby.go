@@ -11,10 +11,10 @@ import (
 
 // Lobby holds state for a matchmaking lobby, implements MatchMakingServer.
 type Lobby struct {
+	sync.Mutex
 	ID     string
 	Users  []*User
 	Config Config
-	Mutex  sync.Mutex
 }
 
 // Config holds parameters for a matchmaking lobby.
@@ -28,8 +28,8 @@ type Config struct {
 
 // State is an object that holds all of the lobbies and provides a mutex lock.
 type State struct {
+	sync.Mutex
 	Lobbies []*Lobby
-	Mutex   sync.Mutex
 }
 
 // PrivacyCheck describes the privacy validation interface.
@@ -88,13 +88,13 @@ func (l *Lobby) Validate(user *User) (err error) {
 
 // Join adds a user to the lobby. Locks the lobby to validate and add user.
 func (l *Lobby) Join(user *User) (err error) {
-	l.Mutex.Lock()
+	l.Lock()
 	err = l.Validate(user)
 	if err != nil {
 		return
 	}
 	l.Users = append(l.Users, user)
-	l.Mutex.Unlock()
+	l.Unlock()
 	return
 }
 
@@ -103,9 +103,9 @@ func (l *Lobby) Join(user *User) (err error) {
 // provided attributes. This method should get overridden in code used for
 // more than testing.
 func (s *State) FindLobby(l *Lobby) (rl *Lobby, err error) {
-	s.Mutex.Lock()
+	s.Lock()
 	for _, _l := range s.Lobbies {
-		_l.Mutex.Lock()
+		_l.Lock()
 		// If lobby IDs are an exact match, return it.
 		// TODO: Greedy filter (missing search attributes don't count against
 		// filter)
@@ -113,7 +113,7 @@ func (s *State) FindLobby(l *Lobby) (rl *Lobby, err error) {
 			rl = _l
 			return
 		}
-		_l.Mutex.Unlock()
+		_l.Unlock()
 	}
 
 	// If no lobby is found with matching attributes, create a new lobby.
@@ -121,7 +121,7 @@ func (s *State) FindLobby(l *Lobby) (rl *Lobby, err error) {
 
 	// Add lobby to state.
 	s.Lobbies = append(s.Lobbies, rl)
-	s.Mutex.Unlock()
+	s.Unlock()
 	return
 }
 

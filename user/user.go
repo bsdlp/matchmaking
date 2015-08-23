@@ -11,8 +11,8 @@ import (
 
 // State holds the global state for users.
 type State struct {
+	sync.Mutex
 	Users []*User
-	Mutex sync.Mutex
 }
 
 // ValidateAndSetName checks if a new name is provided and updates the user's
@@ -59,7 +59,7 @@ func (state *State) Update(ctx context.Context, in *Delta) (u *User, err error) 
 
 // Delete deletes User specified by provided User object from state.
 func (state *State) Delete(ctx context.Context, in *User) (u *User, err error) {
-	state.Mutex.Lock()
+	state.Lock()
 	var index = -1
 	for i, _u := range state.Users {
 		if _u.ID == in.ID {
@@ -75,16 +75,16 @@ func (state *State) Delete(ctx context.Context, in *User) (u *User, err error) {
 		err = fmt.Errorf("User %+v not found in state", in)
 	}
 
-	state.Mutex.Unlock()
+	state.Unlock()
 	return
 }
 
 // Create creates User specified by provided User object and adds it to state.
 func (state *State) Create(ctx context.Context, in *User) (u *User, err error) {
-	state.Mutex.Lock()
+	state.Lock()
 	in.ID = uuid.NewV4().String()
 	state.Users = append(state.Users, in)
-	state.Mutex.Unlock()
+	state.Unlock()
 
 	u = in
 	return

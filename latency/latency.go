@@ -16,21 +16,21 @@ type Checker Config
 
 // Session is the object that holds a user's ping service session.
 type Session struct {
+	sync.Mutex
 	ID        string // UUID
 	Location  string // Location UUID
 	User      string // User UUID
 	IP        net.IP
 	PingCount int // Number of times target has been pinged in this session
 	TotalRTT  time.Duration
-	Mutex     sync.Mutex
 }
 
 // State holds global state for this location.
 type State struct {
+	sync.Mutex
 	PingSessions map[string]*Session // map[IPAddress]*Session
 	PingChecker  Checker
 	Pinger       *fastping.Pinger
-	Mutex        sync.Mutex
 }
 
 // DefaultPingLimit is the default number of times we should ping a target.
@@ -38,9 +38,9 @@ const DefaultPingLimit = 5
 
 // AverageLatency calculates average latency in ms
 func (s *Session) AverageLatency() (averageLatency int64) {
-	s.Mutex.Lock()
+	s.Lock()
 	averageLatency = s.TotalRTT.Nanoseconds() / 1e6 / int64(s.PingCount)
-	s.Mutex.Unlock()
+	s.Unlock()
 	return
 }
 
@@ -53,10 +53,10 @@ func (state *State) NewSession(user string, ip net.IP) (s *Session, err error) {
 		IP:       ip,
 	}
 
-	state.Mutex.Lock()
+	state.Lock()
 	state.PingSessions[ip.String()] = s
 	err = state.Pinger.AddIP(ip.String())
-	state.Mutex.Unlock()
+	state.Unlock()
 	if err != nil {
 		return
 	}
@@ -84,13 +84,13 @@ func NewState(id string) (state *State) {
 func (state *State) onRecv(addr *net.IPAddr, rtt time.Duration) {
 	s := state.PingSessions[addr.String()]
 
-	s.Mutex.Lock()
+	s.Lock()
 	s.TotalRTT += rtt
 	s.PingCount++
 	if s.PingCount > state.PingChecker.PingLimit {
 		state.Pinger.RemoveIPAddr(addr)
 	}
-	s.Mutex.Unlock()
+	s.Unlock()
 
 	return
 }
