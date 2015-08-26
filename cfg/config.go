@@ -29,7 +29,7 @@ type IRCBotConfig struct {
 func LoadConfig() (c *Config, err error) {
 	var cfgNS = config.Namespace{
 		Organization: "fly",
-		Systemn:      "matchmaking",
+		System:       "matchmaking",
 	}
 
 	var c = &Config{}
